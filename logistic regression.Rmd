@@ -1,0 +1,171 @@
+---
+title: "wda group 11 final project"
+output: html_document
+date: "2022-12-04"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+#read in all data from 01/2021 to 10/2022
+```{r}
+d11 <-  read.csv("202101-divvy-tripdata.csv")
+d12 <-  read.csv("202102-divvy-tripdata.csv")
+d13 <-  read.csv("202103-divvy-tripdata.csv")
+d14 <-  read.csv("202104-divvy-tripdata.csv")
+d15 <-  read.csv("202105-divvy-tripdata.csv")
+d16 <-  read.csv("202106-divvy-tripdata.csv")
+d17 <-  read.csv("202107-divvy-tripdata.csv")
+d18 <-  read.csv("202108-divvy-tripdata.csv")
+d19 <-  read.csv("202109-divvy-tripdata.csv")
+d110 <-  read.csv("202110-divvy-tripdata.csv")
+d111 <-  read.csv("202111-divvy-tripdata.csv")
+d112 <-  read.csv("202112-divvy-tripdata.csv")
+d21 <-  read.csv("202201-divvy-tripdata.csv")
+d22 <-  read.csv("202202-divvy-tripdata.csv")
+d23 <-  read.csv("202203-divvy-tripdata.csv")
+d24 <-  read.csv("202204-divvy-tripdata.csv")
+d25 <-  read.csv("202205-divvy-tripdata.csv")
+d26 <-  read.csv("202206-divvy-tripdata.csv")
+d27 <-  read.csv("202207-divvy-tripdata.csv")
+d28 <-  read.csv("202208-divvy-tripdata.csv")
+d29 <-  read.csv("202209-divvy-tripdata.csv")
+d210 <-  read.csv("202210-divvy-tripdata.csv")
+```
+
+#combine data
+```{r}
+df1 <-  rbind(d11,d12,d13,d14,d15,d16,d17,d18,d19,d110,d111,d112,d21,d22,d23,d24,d25,d26,d27,d28,d29,d210)
+```
+
+#install.packages("tidyverse")
+#install.packages("janitor")
+```{r}
+library("tidyverse")
+library("janitor")
+library("ggplot2")
+```
+
+### data structure and data cleanning, drop all the duplicated ride id
+
+```{r}
+df1 <- df1[!duplicated(df1$ride_id),]
+```
+
+# get date info
+```{r}
+df1$date <- as.Date(df1$started_at)
+df1$hour <- strftime(df1$started_at, "%H")
+df1$month <- format(df1$date, "%b")
+df1$day <- format(df1$date, "%d")
+df1$year <- format(df1$date, "%Y")
+df1$day_of_week <- weekdays(df1$date)
+```
+```{r}
+df1$monthn <- format(df1$date, "%m")
+
+```
+
+#get member_casual value
+```{r}
+unique(df1$member_casual)
+```
+#get bike type value
+```{r}
+unique(df1$rideable_type)
+```
+#get each ride's time period
+```{r}
+df1$ride_length <- difftime(df1$ended_at, df1$started_at, units = "mins")
+```
+#change ride_lenght into numeric type 
+```{r}
+df1$ride_length <- as.numeric(as.character(df1$ride_length))
+```
+
+#keep ride records with time period more than 1 min 
+```{r}
+df1 <- filter(df1, ride_length >1)
+```
+
+#data preparation for logistic regression
+#column for membership
+```{r}
+membership = c()
+for (i in 1:length(df1[,1])) {
+  if (df1$member_casual[i] == "member"){
+    membership[i]= 1
+  }else{
+    membership[i] = 0
+  }
+}
+
+```
+
+#column for classic bike
+```{r}
+classic_bike1 <- c()
+docked_bike1 <- c()
+electric_bike1 <- c()
+for (i in 1:length(df1[,1])) {
+  if (df1$rideable_type[i] == "classic_bike"){
+    classic_bike1[i]=1
+  }else{
+    classic_bike1[i] = 0
+  }
+}
+```
+#column for docked bike
+```{r}
+for (i in 1:length(df1[,1])) {
+  if (df1$rideable_type[i] == "docked_bike"){
+    docked_bike1[i]=1
+  }else{
+    docked_bike1[i] = 0
+  }
+}
+```
+
+#column for electric bike
+```{r}
+for (i in 1:length(df1[,1])) {
+  if (df1$rideable_type[i] == "electric_bike"){
+    electric_bike1[i]=1
+  }else{
+    electric_bike1[i] = 0
+  }
+}
+```
+
+
+```{r}
+df1$electric_bike <- electric_bike1
+df1$docked_bike <- docked_bike1
+df1$classic_bike <- classic_bike1
+df1$membership <- membership
+```
+
+
+#logistic regression to find relationship between ebike, classic bike and ride time
+#we can see we can see that both the p-value of these variables are small.all the variable are significant.
+#per increasing in electric bike ride leads to 1.71 (e^(0.5371)) increase in memberships
+#per increasing in classica bike ride leads to 1.86 (e^(0.6185)) increase in memberships
+```{r}
+
+summary(glm(membership~electric_bike+classic_bike+ride_length,data=df1))
+
+```
+#logistic regression to find relationship between ebike, classic bike, ride time, corelation between bike types and ride time.
+#we can see we can see that both the p-value of these variables are small.all the variable are significant.
+#per increasing in electric bike ride leads to 1.84 (e^(0.6118)) increase in memberships
+#per increasing in classica bike ride leads to 1.91 (e^(0.6451)) increase in memberships
+```{r}
+
+summary(glm(membership~electric_bike+classic_bike+ride_length+electric_bike*ride_length+classic_bike*ride_length,data=df1))
+
+```
+
+
+
