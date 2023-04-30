@@ -52,3 +52,6 @@
 >>https://medium.com/@grbaker7/what-does-the-bike-sharing-business-look-like-in-chicago-bb0722faf864
 >>https://account.divvybikes.com/map
 >>https://www.chicago.gov/city/en/depts/cdot/provdrs/future_projects_andconcepts/news/2022/may/divvy-becomes-first-u-s--bikeshare-system-to-incorporate-ebike-c.html
+
+#Rides data can be downloaded from
+https://divvy-tripdata.s3.amazonaws.com/index.html
